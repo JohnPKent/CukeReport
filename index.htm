@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<SCRIPT LANGUAGE="JAVASCRIPT">
+			
+var xmlhttp = new XMLHttpRequest();
+var x;
+var txt;
+var status;
+var myObj;
+function getTest(i, j)	{
+    var sScreenshot;
+	//alert("coords = " + i + ","+ j);
+	//alert("Name = " + myObj[i].elements[j].name);
+    txt = "";
+    txt += "<br><table border='3'>";
+    //txt += "<tr><td width='20%'></td><tdwidth='70%'>Step Name</td><td width='10%'></td>";
+    txt += "<tr>";
+    txt += "<td>" + myObj[i].keyword +  "</td>";
+    txt += "<td>" + myObj[i].name + "</td></tr>";
+    txt += "<tr>";
+	txt += "<td> " + myObj[i].elements[j].keyword + " </td>";
+  	txt += "<td> " + myObj[i].elements[j].name + " </td>";
+	for(k=0;k < myObj[i].elements[j].steps.length; k++) {
+	  txt += "<tr><td></td><td>" + myObj[i].elements[j].steps[k].name + "</td>";
+	  status = myObj[i].elements[j].steps[k].result.status.toUpperCase();
+	  if (status=='PASSED')	{
+		txt += "<td bgcolor='green' > " + status + " </td></tr>";
+	  }
+	  else{ 
+		if (status=='FAILED')	{
+		  txt += "<td bgcolor='red'> " + status + " </td></tr>";
+		  txt += "<tr><td>Error Message</td><td> " + myObj[i].elements[j].steps[k].result.error_message + " </td></tr>";
+		  sScreenshot = myObj[i].elements[j].after[0].output[3].substring(20);
+		  txt += "<tr><td>Screenshot</td><td> " + sScreenshot + " </td></tr>";
+	    }
+	  }
+    }
+    txt += "</table>";                	
+    document.getElementById("test").innerHTML = txt;
+		  //alert(txt);
+}
+
+xmlhttp.onreadystatechange = function() {
+	var bFailed = false;
+	var sFailingStep = "";
+    if (this.readyState == 4 ) {
+    	if (this.status == 200)	{
+		  //alert("in if");
+		  //document.getElementById("steps").innerHTML="Before JSON.Parse";
+		  try {
+			myObj = JSON.parse(this.responseText);
+		  }
+		  catch(err)	{
+			document.getElementById("demo").innerHTML ="Error on parse of Json: "+ err.message;
+			return;
+		  }
+		  //document.getElementById("steps").innerHTML ="After JSON.Parse";
+          //document.getElementById("count").innerHTML = myObj.length;
+       	  //document.getElementById("steps").innerHTML = myObj[1].elements[0].steps.length;
+		  txt = "";
+          for (i=0; i < myObj.length; i++) {
+              txt += "<br><table border='3'>";
+              txt += "<tr>";
+              txt += "<td><b>" + myObj[0].keyword +  "</b></td>";
+              txt += "<td><b>" + myObj[0].name + "</b></td>";
+              txt += "<td><b>Run Status</b></td>";
+              txt += "<td><b>Failing Step</b></td>";
+              txt += "</tr>";
+              for(j=0;j < myObj[i].elements.length; j++) {
+                txt += "<tr>";
+				//status = myObj[i].elements[j].after[0].result.status.toUpperCase();
+                txt += "<td> " + myObj[i].elements[j].keyword + " </td>";
+                txt += "<td  onclick='getTest(" + i + "," + j + ");'> " + myObj[i].elements[j].name + "</td>";
+				bFailed = false;
+                for(k=0;k < myObj[i].elements[j].steps.length; k++) {
+				  //txt += "<tr><td></td><td>" + myObj[i].elements[j].steps[k].name + "</td>";
+				  status = myObj[i].elements[j].steps[k].result.status.toUpperCase();
+				  if (status=='FAILED')	{
+					 bFailed = true;
+					 sFailingStep = myObj[i].elements[j].steps[k].name
+					 break; 
+				  }
+//   				  txt += "<td>" + myObj[i].elements[j].steps[k].name + "</td>";
+//				  txt += "<td>" + myObj[i].elements[j].steps[k].result.status + "</td></tr> <tr>";
+				}
+                if (bFailed)	{
+				  txt += "<td bgcolor='red'> " + status + " </td>";
+   				  txt += "<td>" + sFailingStep + "</td>";
+		        }else {
+				  txt += "<td bgcolor='green'> " + status + " </td>";
+				}
+				  txt += "</tr>"
+			  }
+           txt += "</table>";                	
+         }
+          document.getElementById("demo").innerHTML = txt;
+		  //alert(txt);
+      }else{
+          document.getElementById("demo").innerHTML = this.status;
+        }
+    }
+};
+xmlhttp.open("GET", "Payments_1_Regression_cucumber.json.txt", true);
+xmlhttp.send();
+//alert("after send");
+
+function RunThis()	{
+	alert("hello");
+	textbox.value = "buttin clicked";
+}
+</SCRIPT>
+</head>
+<body>
+
+<h1>Cucumber Results Analysis.</h1>
+<!--
+<p>The content is written in JSON format, and can easily be converted into a JavaScript object.</p>
+
+<p id="count">count</p>
+<p id="steps">steps</p>
+//-->
+<h2>Scenarios</h2>
+<p id="demo">Table is:</p>
+
+<h2>Test</h2>
+<p id="test"></p>
+
+<!--
+<p>Take a look at the <a href="payments1_json.txt" target="_blank">json file</a></p>
+//-->
+</body>
+</html>
